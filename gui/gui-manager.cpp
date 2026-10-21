@@ -38,6 +38,7 @@
 
 #include "graphics/cursorman.h"
 #include "graphics/macgui/macwindowmanager.h"
+#include "graphics/surface.h"
 
 namespace Common {
 DECLARE_SINGLETON(GUI::GuiManager);
@@ -56,6 +57,7 @@ enum {
 GuiManager::GuiManager() : CommandSender(nullptr), _redrawStatus(kRedrawDisabled), _stateIsSaved(false),
 	_cursorAnimateCounter(0), _cursorAnimateTimer(0), _tooltip(nullptr), _lastMouseMoveTime(0), _globalMousePosition(-1, -1) {
 	_theme = nullptr;
+	_renderTarget = nullptr;
 	_useStdCursor = false;
 
 	_system = g_system;
@@ -120,14 +122,17 @@ void GuiManager::initIconsSet() {
 }
 
 void GuiManager::computeScaleFactor() {
-	const Common::Rect safeArea = g_system->getSafeOverlayArea();
+	const Common::Rect safeArea = _renderTarget ? Common::Rect(_renderTarget->w, _renderTarget->h) : g_system->getSafeOverlayArea();
 	const uint16 w = safeArea.width();
 	const uint16 h = safeArea.height();
 
-	_scaleFactor = g_system->getHiDPIScreenFactor();
-	if (ConfMan.hasKey("gui_scale"))
-		_scaleFactor *= ConfMan.getInt("gui_scale") / 100.f;
-
+	if (_renderTarget) {
+		_scaleFactor = 1.0f;
+	} else {
+		_scaleFactor = g_system->getHiDPIScreenFactor();
+		if (ConfMan.hasKey("gui_scale"))
+			_scaleFactor *= ConfMan.getInt("gui_scale") / 100.f;
+	}
 	_baseHeight = (int16)((float)h / _scaleFactor);
 	_baseWidth = (int16)((float)w / _scaleFactor);
 
@@ -908,6 +913,31 @@ void GuiManager::screenChange() {
 	// Resume recording once GUI has redrawn
 	g_eventRec.releaseRecording();
 #endif
+}
+
+void GuiManager::setRenderTarget(Graphics::Surface *target) {
+	_renderTarget = target;
+	_theme->setRenderTarget(target);
+	screenChange();
+}
+
+int16 GuiManager::getScreenWidth() const {
+	return _renderTarget ? _renderTarget->w : _system->getOverlayWidth();
+}
+
+int16 GuiManager::getScreenHeight() const {
+	return _renderTarget ? _renderTarget->h : _system->getOverlayHeight();
+}
+
+Common::Rect GuiManager::getSafeScreenArea(int16 *width, int16 *height) const {
+	if (_renderTarget) {
+		if (width)
+			*width = _renderTarget->w;
+		if (height)
+			*height = _renderTarget->h;
+		return Common::Rect(_renderTarget->w, _renderTarget->h);
+	}
+	return _system->getSafeOverlayArea(width, height);
 }
 
 void GuiManager::processEvent(const Common::Event &event, Dialog *const activeDialog) {
