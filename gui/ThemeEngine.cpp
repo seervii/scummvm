@@ -364,8 +364,13 @@ bool ThemeEngine::init() {
 
 void ThemeEngine::clearAll() {
 	if (_initOk) {
-		_system->clearOverlay();
-		_system->grabOverlay(*_backBuffer.surfacePtr());
+		if (_target) {
+			memset(_target->getPixels(), 0, (size_t)(_target->pitch * _target->h));
+			memset(_backBuffer.getPixels(), 0, (size_t)(_backBuffer.pitch * _backBuffer.h));
+		} else {
+			_system->clearOverlay();
+			_system->grabOverlay(*_backBuffer.surfacePtr());
+		}
 	}
 }
 
@@ -442,8 +447,8 @@ void ThemeEngine::setGraphicsMode(GraphicsMode mode) {
 		error("Invalid graphics mode");
 	}
 
-	uint32 width = _system->getOverlayWidth();
-	uint32 height = _system->getOverlayHeight();
+	uint32 width = _target ? _target->w : _system->getOverlayWidth();
+	uint32 height = _target ? _target->h : _system->getOverlayHeight();
 
 	_backBuffer.free();
 	_backBuffer.create(width, height, _overlayFormat);
@@ -1629,7 +1634,10 @@ void ThemeEngine::updateDirtyScreen() {
 
 	Common::List<Common::Rect>::iterator i;
 	for (i = _dirtyScreen.begin(); i != _dirtyScreen.end(); ++i) {
-		_vectorRenderer->copyFrame(_system, *i);
+		if (_target)
+			_target->copyRectToSurface(_screen.getBasePtr(i->left, i->top), _screen.pitch,i->left, i->top, i->width(), i->height());
+		else
+			_vectorRenderer->copyFrame(_system, *i);
 	}
 
 	_dirtyScreen.clear();

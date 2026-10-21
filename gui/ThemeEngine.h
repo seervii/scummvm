@@ -674,7 +674,7 @@ public:
 	Common::SharedPtr<Graphics::ManagedSurface> getImageSurface(const Common::String &name) const {
 		return _bitmaps.contains(name) ? _bitmaps[name] : 0;
 	}
-
+	void setRenderTarget(Graphics::Surface *target) { _target = target; }
 	/**
 	 * Interface for the Theme Parser: Creates a new cursor by loading the given
 	 * bitmap and sets it as the active cursor.
@@ -809,6 +809,9 @@ protected:
 
 	/** Backbuffer surface. Stores previous states of the screen to blit back */
 	Graphics::ManagedSurface _backBuffer;
+
+	/** Dumper's surface. When it's null, everything behaves as today */
+	Graphics::Surface *_target = nullptr;
 
 	/**
 	 * Filter the submitted DrawData descriptors according to their layer attribute
