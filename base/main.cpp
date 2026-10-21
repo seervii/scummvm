@@ -483,9 +483,6 @@ extern "C" int scummvm_main(int argc, const char * const argv[]) {
 	// Update the config file
 	ConfMan.set("versioninfo", gScummVMVersion, Common::ConfigManager::kApplicationDomain);
 
-	// Immediately remove possible residue for Dump All Dialogs feature
-	ConfMan.removeKey("dumper_force_resize", Common::ConfigManager::kApplicationDomain);
-
 	// Load and setup the debuglevel and the debug flags. We do this at the
 	// soonest possible moment to ensure debug output starts early on, if
 	// requested.
