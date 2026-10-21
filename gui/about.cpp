@@ -474,7 +474,7 @@ void AboutDialog::reflowLayout() {
 	int i;
 
 	int16 screenW, screenH;
-	const Common::Rect screenArea = g_system->getSafeOverlayArea(&screenW, &screenH);
+	const Common::Rect screenArea = g_gui.getSafeScreenArea(&screenW, &screenH);
 
 	_xOff = g_gui.xmlEval()->getVar("Globals.About.XOffset", 5);
 	_yOff = g_gui.xmlEval()->getVar("Globals.About.YOffset", 5);

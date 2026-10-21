@@ -74,7 +74,7 @@ void PopUpDialog::open() {
 	// FIXME - OSystem should send out notification messages when the screen
 	// resolution changes... we could generalize CommandReceiver and CommandSender.
 
-	Common::Rect safeArea = g_system->getSafeOverlayArea();
+	Common::Rect safeArea = g_gui.getSafeScreenArea();
 
 	// HACK: For now, we do not do scrolling. Instead, we draw the dialog
 	// in two columns if it's too tall.
@@ -132,7 +132,7 @@ void PopUpDialog::drawDialog(DrawLayer layerToDraw, bool resetClipping) {
 
 	int16 x = _x;
 	if (g_gui.useRTL()) {
-		x = g_system->getOverlayWidth() - _x - _w;
+		x = g_gui.getScreenWidth() - _x - _w;
 	}
 
 	// Draw the menu border
@@ -400,7 +400,7 @@ void PopUpDialog::drawMenuEntry(int entry, bool hilite) {
 	int pad = _leftPadding;
 
 	if (g_gui.useRTL()) {
-		const int16 screenW = g_system->getOverlayWidth();
+		const int16 screenW = g_gui.getScreenWidth();
 		r1.left = screenW - r1.left - w;
 		r1.right = r1.left + w;
 		r2.left = screenW - r2.left - w;

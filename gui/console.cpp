@@ -98,7 +98,7 @@ ConsoleDialog::~ConsoleDialog() {
 }
 
 void ConsoleDialog::init() {
-	const Common::Rect safeArea = g_system->getSafeOverlayArea();
+	const Common::Rect safeArea = g_gui.getSafeScreenArea();
 
 	_font = &g_gui.getFont(ThemeEngine::kFontStyleConsole);
 
@@ -167,7 +167,7 @@ void ConsoleDialog::open() {
 	// visible screen area, then shift it down in handleTickle() over a
 	// certain period of time.
 
-	const Common::Rect safeArea = g_system->getSafeOverlayArea();
+	const Common::Rect safeArea = g_gui.getSafeScreenArea();
 
 	// Calculate the real width/height (rounded to char/line multiples)
 	uint16 w = (uint16)(_widthPercent * safeArea.width());

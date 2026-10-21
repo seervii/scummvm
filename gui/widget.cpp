@@ -110,7 +110,7 @@ void Widget::draw() {
 		Common::Rect activeRect = g_gui.theme()->getClipRect();
 		Common::Rect clip = _boss->getClipRect().findIntersectingRect(activeRect);
 		if (g_gui.useRTL()) {
-			_x = g_system->getOverlayWidth() - _x - _w;
+			_x = g_gui.getScreenWidth() - _x - _w;
 			clip.moveTo(_x, clip.top);
 		}
 		oldClip = g_gui.theme()->swapClipRect(clip);

@@ -112,7 +112,7 @@ void TextViewerDialog::destroy() {
 
 void TextViewerDialog::reflowLayout() {
 	int16 screenW, screenH;
-	const Common::Rect safeArea = g_system->getSafeOverlayArea(&screenW, &screenH);
+	const Common::Rect safeArea = g_gui.getSafeScreenArea(&screenW, &screenH);
 
 	// Calculate the real width/height (rounded to char/line multiples)
 	_w = (uint16)(kDialogWidthPercent * safeArea.width());

@@ -72,7 +72,7 @@ void MessageDialog::reflowLayout() {
 	const int buttonSpacing = 10;
 
 	int16 screenW, screenH;
-	const Common::Rect safeArea = g_system->getSafeOverlayArea(&screenW, &screenH);
+	const Common::Rect safeArea = g_gui.getSafeScreenArea(&screenW, &screenH);
 
 	int buttonWidth = g_gui.xmlEval()->getVar("Globals.Button.Width", 0);
 	int buttonHeight = g_gui.xmlEval()->getVar("Globals.Button.Height", 0);

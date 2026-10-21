@@ -1978,7 +1978,7 @@ RemovalConfirmationDialog::~RemovalConfirmationDialog() {
 
 void RemovalConfirmationDialog::reflowLayout() {
 	int16 screenW, screenH;
-	const Common::Rect safeArea = g_system->getSafeOverlayArea(&screenW, &screenH);
+	const Common::Rect safeArea = g_gui.getSafeScreenArea(&screenW, &screenH);
 
 	const int buttonCount = _buttons.size();
 	const int buttonsTotalWidth = buttonCount * _buttonWidth + (buttonCount - 1) * kButtonSpacing;

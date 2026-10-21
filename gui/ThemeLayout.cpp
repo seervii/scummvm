@@ -230,7 +230,7 @@ void ThemeLayoutMain::reflowLayout(Widget *widgetChain) {
 	int16 screenW;
 	int16 screenH;
 
-	Common::Rect safeArea = g_system->getSafeOverlayArea(&screenW, &screenH);
+	Common::Rect safeArea = g_gui.getSafeScreenArea(&screenW, &screenH);
 	SafeAreaType safeAreaType;
 
 	// With RTL, we just flip everything on the X axis, so do the same with the safeArea
