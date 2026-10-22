@@ -573,7 +573,7 @@ int EditableWidget::getSelectionCarretOffset() const {
 		return;
 
 	if (g_gui.useRTL())
-		x += g_gui.getScreenWidth() - _w - xOff;
+		x += g_gui.theme()->screen()->w - _w - xOff;
 	else
 		x += xOff;
 	y += yOff;

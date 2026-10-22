@@ -38,7 +38,7 @@
 
 #include "graphics/cursorman.h"
 #include "graphics/macgui/macwindowmanager.h"
-#include "graphics/surface.h"
+#include "graphics/managed_surface.h"
 
 namespace Common {
 DECLARE_SINGLETON(GUI::GuiManager);
@@ -57,7 +57,6 @@ enum {
 GuiManager::GuiManager() : CommandSender(nullptr), _redrawStatus(kRedrawDisabled), _stateIsSaved(false),
 	_cursorAnimateCounter(0), _cursorAnimateTimer(0), _tooltip(nullptr), _lastMouseMoveTime(0), _globalMousePosition(-1, -1) {
 	_theme = nullptr;
-	_renderTarget = nullptr;
 	_useStdCursor = false;
 
 	_system = g_system;
@@ -122,11 +121,11 @@ void GuiManager::initIconsSet() {
 }
 
 void GuiManager::computeScaleFactor() {
-	const Common::Rect safeArea = _renderTarget ? Common::Rect(_renderTarget->w, _renderTarget->h) : g_system->getSafeOverlayArea();
+	const Common::Rect safeArea = getSafeScreenArea();
 	const uint16 w = safeArea.width();
 	const uint16 h = safeArea.height();
 
-	if (_renderTarget) {
+	if (_theme && _theme->noBlit()) {
 		_scaleFactor = 1.0f;
 	} else {
 		_scaleFactor = g_system->getHiDPIScreenFactor();
@@ -915,27 +914,19 @@ void GuiManager::screenChange() {
 #endif
 }
 
-void GuiManager::setRenderTarget(Graphics::Surface *target) {
-	_renderTarget = target;
+void GuiManager::setRenderTarget(Graphics::ManagedSurface *target) {
 	_theme->setRenderTarget(target);
 	screenChange();
 }
 
-int16 GuiManager::getScreenWidth() const {
-	return _renderTarget ? _renderTarget->w : _system->getOverlayWidth();
-}
-
-int16 GuiManager::getScreenHeight() const {
-	return _renderTarget ? _renderTarget->h : _system->getOverlayHeight();
-}
-
 Common::Rect GuiManager::getSafeScreenArea(int16 *width, int16 *height) const {
-	if (_renderTarget) {
+	if (_theme && _theme->noBlit()) {
+		const Graphics::ManagedSurface *screen = _theme->screen();
 		if (width)
-			*width = _renderTarget->w;
+			*width = screen->w;
 		if (height)
-			*height = _renderTarget->h;
-		return Common::Rect(_renderTarget->w, _renderTarget->h);
+			*height = screen->h;
+		return Common::Rect(screen->w, screen->h);
 	}
 	return _system->getSafeOverlayArea(width, height);
 }

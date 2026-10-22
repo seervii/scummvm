@@ -1503,8 +1503,8 @@ void OptionsDialog::addAchievementsControls(GuiObject *boss, const Common::Strin
 		textline_numchars = 70 + 80 * (scale_factor - 1);
 		progressBarWidth = 240;
 		commentDelta *= scale_factor;
-		if (g_gui.getScreenWidth() - width < 100) {
-			width = g_gui.getScreenWidth() - 100 * scale_factor; // clamp width to at least 100px smaller than overlay to prevent glitchy scrollbars
+		if (g_gui.theme()->screen()->w - width < 100) {
+			width = g_gui.theme()->screen()->w - 100 * scale_factor; // clamp width to at least 100px smaller than overlay to prevent glitchy scrollbars
 		}
 	} else { // lores
 		width = 250 + 480 * (scale_factor - 1);

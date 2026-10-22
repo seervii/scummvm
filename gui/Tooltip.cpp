@@ -50,8 +50,8 @@ void Tooltip::setup(Widget *widget, int x, int y) {
 	_w = tooltipFont->wordWrapText(widget->getTooltip(), _maxWidth - _xpadding * 2, _wrappedLines) + _xpadding * 2;
 	_h = (tooltipFont->getFontHeight() + 2) * _wrappedLines.size() + _ypadding * 2;
 
-	_x = MIN<int16>(x + _xdelta + _xpadding, g_gui.getScreenWidth() - _w - _xpadding * 2);
-	_y = MIN<int16>(y + _ydelta + _ypadding, g_gui.getScreenHeight() - _h - _ypadding * 2);
+	_x = MIN<int16>(x + _xdelta + _xpadding, g_gui.theme()->screen()->w - _w - _xpadding * 2);
+	_y = MIN<int16>(y + _ydelta + _ypadding, g_gui.theme()->screen()->h - _h - _ypadding * 2);
 
 	if (ConfMan.hasKey("tts_enabled", "scummvm") &&
 			ConfMan.getBool("tts_enabled", "scummvm")) {
@@ -70,7 +70,7 @@ void Tooltip::drawDialog(DrawLayer layerToDraw, bool resetClipping) {
 
 	int16 textX = _x + 1 + _xpadding;
 	if (g_gui.useRTL()) {
-		textX = g_gui.getScreenWidth() - _w - textX;
+		textX = g_gui.theme()->screen()->w - _w - textX;
 	}
 
 	int16 textY = _y + 1 + _ypadding;

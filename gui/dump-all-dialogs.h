@@ -28,7 +28,7 @@
 
 namespace GUI {
 
-void saveGUISnapshot(Graphics::Surface surf, const Common::String &filename);
+void saveGUISnapshot(const Graphics::Surface &surf, const Common::String &filename);
 void dumpDialogs(const Common::String &message, const Common::String &lang);
 void dumpAllDialogs(const Common::String &message = "test");
 void loopThroughTabs(GUI::Dialog &dialog, const Common::String &lang, Graphics::Surface surf, const Common::String name);

@@ -36,6 +36,7 @@
 class OSystem;
 
 namespace Graphics {
+class ManagedSurface;
 class Font;
 class MacWindowManager;
 struct Surface;
@@ -120,11 +121,9 @@ public:
 	 * Directs GUI drawing into the given surface instead of the screen overlay.
 	 * Uses the surface dimensions for layout at 1:1 scaling.
 	 */
-	void setRenderTarget(Graphics::Surface *target);
+	void setRenderTarget(Graphics::ManagedSurface *target);
 	/** Screen size in pixels: the render target's size when set, otherwise the overlay's. */
-	int16 getScreenWidth() const;
 	Common::Rect getSafeScreenArea(int16 *width = nullptr, int16 *height = nullptr) const;
-	int16 getScreenHeight() const;
 	int16 getGUIHeight() const { return _baseHeight; }
 	float getScaleFactor() const { return _scaleFactor; }
 	void computeScaleFactor();
@@ -190,8 +189,6 @@ protected:
 	RedrawStatus _redrawStatus;
 	int			_lastScreenChangeID;
 	int16		_baseWidth, _baseHeight;
-
-	Graphics::Surface *_renderTarget;
 
 	float		_scaleFactor;
 	DialogStack	_dialogStack;

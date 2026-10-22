@@ -132,7 +132,7 @@ void PopUpDialog::drawDialog(DrawLayer layerToDraw, bool resetClipping) {
 
 	int16 x = _x;
 	if (g_gui.useRTL()) {
-		x = g_gui.getScreenWidth() - _x - _w;
+		x = g_gui.theme()->screen()->w - _x - _w;
 	}
 
 	// Draw the menu border
@@ -400,7 +400,7 @@ void PopUpDialog::drawMenuEntry(int entry, bool hilite) {
 	int pad = _leftPadding;
 
 	if (g_gui.useRTL()) {
-		const int16 screenW = g_gui.getScreenWidth();
+		const int16 screenW = g_gui.theme()->screen()->w;
 		r1.left = screenW - r1.left - w;
 		r1.right = r1.left + w;
 		r2.left = screenW - r2.left - w;

@@ -50,7 +50,7 @@
 
 namespace GUI {
 
-void saveGUISnapshot(Graphics::Surface surf, const Common::String &filename) {
+void saveGUISnapshot(const Graphics::Surface &surf, const Common::String &filename) {
 	Common::DumpFile outFile;
 	Common::String outName = Common::String::format("snapshots/%s", filename.c_str());
 
@@ -63,15 +63,15 @@ void saveGUISnapshot(Graphics::Surface surf, const Common::String &filename) {
 	}
 }
 
-void handleSimpleDialog(GUI::Dialog &dialog, const Common::String &filename,Graphics::Surface surf) {
+void handleSimpleDialog(GUI::Dialog &dialog, const Common::String &filename,Graphics::ManagedSurface &surf) {
 	dialog.open();         // For rendering
 	dialog.reflowLayout(); // For updating surface
 	g_gui.redrawFull();
-	saveGUISnapshot(surf, filename);
+	saveGUISnapshot(surf.rawSurface(), filename);
 	dialog.close();
 }
 
-void loopThroughTabs(GUI::Dialog &dialog, const Common::String &lang, Graphics::Surface surf, const Common::String name) {
+void loopThroughTabs(GUI::Dialog &dialog, const Common::String &lang, Graphics::ManagedSurface &surf, const Common::String name) {
 	dialog.open();
 	GUI::Widget *widget = nullptr;
 	widget = dialog.findWidget((uint32)kTabWidget);
@@ -87,7 +87,7 @@ void loopThroughTabs(GUI::Dialog &dialog, const Common::String &lang, Graphics::
 	dialog.close();
 }
 
-void dumpDialogs(const Common::String &message, const Common::String &lang, Graphics::Surface &surf) {
+void dumpDialogs(const Common::String &message, const Common::String &lang, Graphics::ManagedSurface &surf) {
 #ifdef USE_TRANSLATION
 	// Update GUI language
 	TransMan.setLanguage(lang);
@@ -184,8 +184,7 @@ void dumpAllDialogs(const Common::String &message) {
 		int h = r[1];
 
 		// Update resolution
-		Graphics::Surface surf;
-		surf.create(w, h, g_system->getOverlayFormat());
+		Graphics::ManagedSurface surf(w, h, g_system->getOverlayFormat());
 		g_gui.setRenderTarget(&surf);
 
 		// Iterate through all langauges
@@ -194,7 +193,6 @@ void dumpAllDialogs(const Common::String &message) {
 		}
 
 		g_gui.setRenderTarget(nullptr);
-		surf.free();
 
 	}
 

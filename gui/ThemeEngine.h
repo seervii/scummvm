@@ -370,7 +370,6 @@ public:
 
 	void disable();
 
-
 	/**
 	 * Query the set up pixel format.
 	 */
@@ -674,7 +673,14 @@ public:
 	Common::SharedPtr<Graphics::ManagedSurface> getImageSurface(const Common::String &name) const {
 		return _bitmaps.contains(name) ? _bitmaps[name] : 0;
 	}
-	void setRenderTarget(Graphics::Surface *target) { _target = target; }
+	void setRenderTarget(Graphics::ManagedSurface *surface) {
+		_screen = surface ? surface : &_ownScreen;
+		_noBlit = (surface != nullptr);
+	}
+	/** The surface the theme draws on. */
+	const Graphics::ManagedSurface *screen() const { return _screen; }
+	/** True if drawing to a surface supplied by setRenderTarget(). */
+	bool noBlit() const { return _noBlit; }
 	/**
 	 * Interface for the Theme Parser: Creates a new cursor by loading the given
 	 * bitmap and sets it as the active cursor.
@@ -804,14 +810,12 @@ protected:
 	/** Theme getEvaluator (changed from GUI::Eval to add functionality) */
 	GUI::ThemeEval *_themeEval;
 
-	/** Main screen surface. This is blitted straight into the overlay. */
-	Graphics::ManagedSurface _screen;
-
+	/** Main screen surface. This is blitted to the surface being drawn on. */
+	Graphics::ManagedSurface _ownScreen;
+	Graphics::ManagedSurface *_screen = &_ownScreen;
+	bool _noBlit = false;
 	/** Backbuffer surface. Stores previous states of the screen to blit back */
 	Graphics::ManagedSurface _backBuffer;
-
-	/** Dumper's surface. When it's null, everything behaves as today */
-	Graphics::Surface *_target = nullptr;
 
 	/**
 	 * Filter the submitted DrawData descriptors according to their layer attribute

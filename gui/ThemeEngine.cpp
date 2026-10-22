@@ -238,7 +238,7 @@ ThemeEngine::ThemeEngine(Common::String id, GraphicsMode mode) :
 ThemeEngine::~ThemeEngine() {
 	delete _vectorRenderer;
 	_vectorRenderer = nullptr;
-	_screen.free();
+	_ownScreen.free();
 	_backBuffer.free();
 
 	unloadTheme();
@@ -314,13 +314,13 @@ bool ThemeEngine::init() {
 	_overlayFormat = _system->getOverlayFormat();
 	setGraphicsMode(_graphicsMode);
 
-	if (_screen.getPixels() && _backBuffer.getPixels()) {
+	if (_screen->getPixels() && _backBuffer.getPixels()) {
 		_initOk = true;
 	}
 
 	// TODO: Instead of hard coding the font here, it should be possible
 	// to specify the fonts to be used for each resolution in the theme XML.
-	if (_screen.w >= 400 && _screen.h >= 300) {
+	if (_screen->w >= 400 && _screen->h >= 300) {
 		_font = FontMan.getFontByUsage(Graphics::FontManager::kBigGUIFont);
 	} else {
 		_font = FontMan.getFontByUsage(Graphics::FontManager::kGUIFont);
@@ -364,9 +364,9 @@ bool ThemeEngine::init() {
 
 void ThemeEngine::clearAll() {
 	if (_initOk) {
-		if (_target) {
-			memset(_target->getPixels(), 0, (size_t)(_target->pitch * _target->h));
-			memset(_backBuffer.getPixels(), 0, (size_t)(_backBuffer.pitch * _backBuffer.h));
+		if (_noBlit) {
+			_screen->fillRect(Common::Rect(_screen->w, _screen->h), 0);
+			_backBuffer.fillRect(Common::Rect(_backBuffer.w, _backBuffer.h), 0);
 		} else {
 			_system->clearOverlay();
 			_system->grabOverlay(*_backBuffer.surfacePtr());
@@ -447,18 +447,21 @@ void ThemeEngine::setGraphicsMode(GraphicsMode mode) {
 		error("Invalid graphics mode");
 	}
 
-	uint32 width = _target ? _target->w : _system->getOverlayWidth();
-	uint32 height = _target ? _target->h : _system->getOverlayHeight();
+	uint32 width = _system->getOverlayWidth();
+	uint32 height = _system->getOverlayHeight();
+
+	if (!_noBlit) {
+		_ownScreen.free();
+		_ownScreen.create(width, height, _overlayFormat);
+		_screen = &_ownScreen;
+	}
 
 	_backBuffer.free();
-	_backBuffer.create(width, height, _overlayFormat);
-
-	_screen.free();
-	_screen.create(width, height, _overlayFormat);
+	_backBuffer.create(_screen->w, _screen->h, _overlayFormat);
 
 	delete _vectorRenderer;
 	_vectorRenderer = Graphics::createRenderer(mode);
-	_vectorRenderer->setSurface(&_screen);
+	_vectorRenderer->setSurface(_screen);
 
 	// Since we reinitialized our screen surfaces we know nothing has been
 	// drawn so far. Sometimes we still end up with dirty screen bits in the
@@ -488,7 +491,7 @@ void ThemeEngine::restoreBackground(Common::Rect r) {
 		return;
 	}
 
-	r.clip(_screen.w, _screen.h);
+	r.clip(_screen->w, _screen->h);
 	_vectorRenderer->blitSurface(&_backBuffer, r);
 
 	addDirtyRect(r);
@@ -931,7 +934,7 @@ Common::Rect ThemeEngine::getDrawDataExtendedRect(DrawData type, const Common::R
 		return Common::Rect();
 
 	Common::Rect extendedRect = r;
-	extendedRect.clip(_screen.w, _screen.h);
+	extendedRect.clip(_screen->w, _screen->h);
 
 	// A frame drawn around the widget extends on all four sides
 	extendedRect.grow(drawData->_backgroundOffset);
@@ -950,7 +953,7 @@ Common::Rect ThemeEngine::getDrawDataRestoreRect(DrawData type, const Common::Re
 		return Common::Rect();
 
 	Common::Rect restoreRect = r;
-	restoreRect.clip(_screen.w, _screen.h);
+	restoreRect.clip(_screen->w, _screen->h);
 
 	// The item's own edge and shadow reach further out, onto pixels that belong
 	// to the neighbouring widgets and must not be restored over what they drew
@@ -972,7 +975,7 @@ void ThemeEngine::drawDD(DrawData type, const Common::Rect &r, uint32 dynamic, b
 		drawDD(kDrawDataDefaults[type].parent, r, dynamic);
 
 	Common::Rect area = r;
-	area.clip(_screen.w, _screen.h);
+	area.clip(_screen->w, _screen->h);
 
 	// An empty clip means "fully outside active clip region" (e.g. a widget
 	// whose boss clip does not intersect the tooltip clip). Cull entirely —
@@ -1016,7 +1019,7 @@ void ThemeEngine::drawDDText(TextData type, TextColor color, const Common::Rect 
 		return;
 
 	Common::Rect area = r;
-	area.clip(_screen.w, _screen.h);
+	area.clip(_screen->w, _screen->h);
 
 	// First, clip to what the user provides
 	// If an empty rect is provided, use the standard area
@@ -1535,7 +1538,7 @@ void ThemeEngine::drawChar(const Common::Rect &r, byte ch, const Graphics::Font 
 		return;
 
 	Common::Rect charArea = r;
-	charArea.clip(_screen.w, _screen.h);
+	charArea.clip(_screen->w, _screen->h);
 
 	uint32 rgbColor = _overlayFormat.RGBToColor(_textColors[color]->r, _textColors[color]->g, _textColors[color]->b);
 
@@ -1554,7 +1557,7 @@ void ThemeEngine::drawChar(const Common::Rect &r, byte ch, const Graphics::Font 
 	default:
 		break;
 	}
-	font->drawChar(&_screen, ch, charArea.left, charArea.top, rgbColor);
+	font->drawChar(_screen, ch, charArea.left, charArea.top, rgbColor);
 	addDirtyRect(charArea);
 }
 
@@ -1576,24 +1579,24 @@ void ThemeEngine::drawFoldIndicator(const Common::Rect &r, bool expanded) {
 }
 
 void ThemeEngine::debugWidgetPosition(const char *name, const Common::Rect &r) {
-	_font->drawString(&_screen, name, r.left, r.top, r.width(), 0xFFFF, Graphics::kTextAlignRight, 0, true);
-	_screen.hLine(r.left, r.top, r.right, 0xFFFF);
-	_screen.hLine(r.left, r.bottom, r.right, 0xFFFF);
-	_screen.vLine(r.left, r.top, r.bottom, 0xFFFF);
-	_screen.vLine(r.right, r.top, r.bottom, 0xFFFF);
+	_font->drawString(_screen, name, r.left, r.top, r.width(), 0xFFFF, Graphics::kTextAlignRight, 0, true);
+	_screen->hLine(r.left, r.top, r.right, 0xFFFF);
+	_screen->hLine(r.left, r.bottom, r.right, 0xFFFF);
+	_screen->vLine(r.left, r.top, r.bottom, 0xFFFF);
+	_screen->vLine(r.right, r.top, r.bottom, 0xFFFF);
 }
 
 /**********************************************************
  * Screen/overlay management
  *********************************************************/
 void ThemeEngine::copyBackBufferToScreen() {
-	memcpy(_screen.getPixels(), _backBuffer.getPixels(), (size_t)(_screen.pitch * _screen.h));
+	memcpy(_screen->getPixels(), _backBuffer.getPixels(), (size_t)(_screen->pitch * _screen->h));
 }
 
 void ThemeEngine::updateScreen() {
 #ifdef LAYOUT_DEBUG_DIALOG
 	_vectorRenderer->fillSurface();
-	_themeEval->debugDraw(&_screen, _font);
+	_themeEval->debugDraw(_screen, _font);
 	_vectorRenderer->copyWholeFrame(_system);
 #else
 	updateDirtyScreen();
@@ -1602,7 +1605,7 @@ void ThemeEngine::updateScreen() {
 
 void ThemeEngine::addDirtyRect(Common::Rect r) {
 	// Clip the rect to screen coords
-	r.clip(_screen.w, _screen.h);
+	r.clip(_screen->w, _screen->h);
 
 	// If it is empty after clipping, we are done
 	if (r.isEmpty())
@@ -1633,20 +1636,17 @@ void ThemeEngine::updateDirtyScreen() {
 		return;
 
 	Common::List<Common::Rect>::iterator i;
-	for (i = _dirtyScreen.begin(); i != _dirtyScreen.end(); ++i) {
-		if (_target)
-			_target->copyRectToSurface(_screen.getBasePtr(i->left, i->top), _screen.pitch,i->left, i->top, i->width(), i->height());
-		else
+	if (!_noBlit) {
+		for (i = _dirtyScreen.begin(); i != _dirtyScreen.end(); ++i)
 			_vectorRenderer->copyFrame(_system, *i);
 	}
-
 	_dirtyScreen.clear();
 }
 
 void ThemeEngine::applyScreenShading(ShadingStyle style) {
 	if (style != kShadingNone) {
 		_vectorRenderer->applyScreenShading(style);
-		addDirtyRect(Common::Rect(0, 0, _screen.w, _screen.h));
+		addDirtyRect(Common::Rect(0, 0, _screen->w, _screen->h));
 	}
 }
 
@@ -2339,7 +2339,7 @@ void ThemeEngine::drawToBackbuffer() {
 }
 
 void ThemeEngine::drawToScreen() {
-	_vectorRenderer->setSurface(&_screen);
+	_vectorRenderer->setSurface(_screen);
 }
 
 Common::Rect ThemeEngine::swapClipRect(const Common::Rect &newRect) {
@@ -2353,7 +2353,7 @@ const Common::Rect ThemeEngine::getClipRect() {
 }
 
 void ThemeEngine::disableClipRect() {
-	_clip = Common::Rect(_screen.w, _screen.h);
+	_clip = Common::Rect(_screen->w, _screen->h);
 }
 
 } // End of namespace GUI.
